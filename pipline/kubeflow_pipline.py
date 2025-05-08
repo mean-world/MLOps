@@ -244,3 +244,16 @@ def train_model(
     with open(model.path, 'wb') as f:
          trainer.save_checkpoint("sr_lightning_model.ckpt")
     
+
+@dsl.pipeline(name='kubeflow-pipeline')
+def my_pipeline():
+    load_dataset_task = load_dataset()
+    train_model(load_dataset_task)
+
+
+endpoint = 'http://localhost:8888'
+kfp_client = client.Client(host=endpoint)
+run = kfp_client.create_run_from_pipeline_func(
+    my_pipeline,)
+url = f'{endpoint}/#/runs/details/{run.run_id}'
+print(url)
