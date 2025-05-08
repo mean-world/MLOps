@@ -29,7 +29,7 @@ def load_dataset(Portrait_dataset: Output[Dataset]):
     compress_directory_to_zip(input_directory, output_zip_file)
 
 
-@dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'PIL', 'pytorch-lightning'])
+@dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning'])
 def train_model(
     Portrait_dataset: Input[Dataset],
     model: Output[Model],
