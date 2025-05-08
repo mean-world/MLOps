@@ -218,7 +218,7 @@ def train_model(
     random_seed = 42
 
 
-    model = SRLightningModule(
+    sample_model = SRLightningModule(
         learning_rate=learning_rate,
         hr_dir=hr_data_dir,
         lr_dir=lr_data_dir,
@@ -231,13 +231,13 @@ def train_model(
     trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1)
 
     # --- 訓練模型 ---
-    trainer.fit(model) # 現在不需要傳遞 datamodule 如果你在 LightningModule 中定義了 dataloaders
+    trainer.fit(sample_model) # 現在不需要傳遞 datamodule 如果你在 LightningModule 中定義了 dataloaders
 
     # --- 驗證模型 ---
-    trainer.validate(model)
+    trainer.validate(sample_model)
 
     # --- 測試模型 ---
-    trainer.test(model)
+    trainer.test(sample_model)
 
     # --- 保存模型 ---
     model.uri = model.uri + '.ckpt'
