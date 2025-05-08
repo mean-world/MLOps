@@ -248,7 +248,7 @@ def train_model(
 @dsl.pipeline(name='kubeflow-pipeline')
 def my_pipeline():
     load_dataset_task = load_dataset()
-    train_model(Portrait_dataset=load_dataset_task)
+    train_model(Portrait_dataset=load_dataset_task.outputs['Portrait_dataset'])
 
 
 endpoint = 'http://localhost:8888'
