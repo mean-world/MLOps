@@ -67,6 +67,26 @@ class SRModel(nn.Module):
         out = self.final_conv(upsampled)
         return out
 
+import torch
+import torch.nn as nn
+
+class SimpleUpscaleCNN(nn.Module):
+    def __init__(self):
+        super(SimpleUpscaleCNN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.relu2 = nn.ReLU()
+        self.upsample = nn.Upsample(scale_factor=4, mode='bilinear', align_corners=False)
+        self.conv_out = nn.Conv2d(64, 3, kernel_size=3, padding=1)
+
+    def forward(self, x):
+        x = self.relu1(self.conv1(x))
+        x = self.relu2(self.conv2(x))
+        x = self.upsample(x)
+        x = self.conv_out(x)
+        return x
+
 # 創建模型實例
 # model = SRModel()
 # print(model)
@@ -75,3 +95,15 @@ class SRModel(nn.Module):
 # low_res_input = torch.randn(1, 3, 256, 256) # 假設輸入是 256x256 (調整以匹配你的實際輸入)
 # high_res_output = model(low_res_input)
 # print("Output size:", high_res_output.size()) # 預期輸出尺寸接近目標尺寸
+
+# # 創建模型實例
+# model = SimpleUpscaleCNN()
+
+# # 測試輸入
+# low_res_input = torch.randn(1, 3, 256, 256)
+
+# # 獲取模型輸出
+# output = model(low_res_input)
+
+# # 打印輸出形狀
+# print("輸出形狀:", output.shape)
