@@ -214,7 +214,7 @@ def train_model(
     max_epochs = 10
     hr_data_dir = 'dataset/target' # 你的高解析度圖片目錄
     lr_data_dir = 'dataset/input' # 你的低解析度圖片目錄
-    num_workers = 4
+    num_workers = 0
     random_seed = 42
 
 
