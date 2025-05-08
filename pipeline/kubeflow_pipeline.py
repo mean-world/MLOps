@@ -23,7 +23,7 @@ def load_dataset(Portrait_dataset: Output[Dataset]):
                     zipf.write(file_path, relative_path)
 
 
-    input_directory = "pipline/test_dataset/"  
+    input_directory = "MLOps/pipline/test_dataset/"  
     Portrait_dataset.uri = Portrait_dataset.uri + '.zip'
     output_zip_file = Portrait_dataset.path
     compress_directory_to_zip(input_directory, output_zip_file)
