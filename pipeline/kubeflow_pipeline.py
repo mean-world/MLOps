@@ -240,22 +240,14 @@ def train_model(
     trainer.test(sample_model)
 
     # --- 保存模型 ---
-    model.uri = model.uri + '.ckpt'
+    model.uri = model.uri + '.zip'
     trainer.save_checkpoint("sr_lightning_model.ckpt")
 
     ckpt_filename = "sr_lightning_model.ckpt"
-    zip_filename = "sr_lightning_model.zip"
 
     # 假設 .ckpt 檔案在目前工作目錄
-    if os.path.exists(ckpt_filename):
-        with zipfile.ZipFile(model.uri, 'w', zipfile.ZIP_DEFLATED) as zf:
-            zf.write(ckpt_filename, os.path.basename(ckpt_filename))
-        print(f"模型檢查點已壓縮至: {zip_filename}")
-
-        # 可選：刪除原始的 .ckpt 檔案
-        # os.remove(ckpt_filename)
-    else:
-        print(f"找不到模型檢查點檔案: {ckpt_filename}")
+    with zipfile.ZipFile(model.uri, 'w', zipfile.ZIP_DEFLATED) as zf:
+        zf.write(ckpt_filename, os.path.basename(ckpt_filename))
 
 @dsl.pipeline(name='kubeflow-pipeline')
 def my_pipeline():
