@@ -240,29 +240,12 @@ def train_model(
     trainer.test(sample_model)
 
     # --- 保存模型 ---
-    model.uri = model.uri + '.zip'
-    trainer.save_checkpoint("sr_lightning_model.ckpt")
-
-    ckpt_filename = "sr_lightning_model.ckpt"
-
-    # 假設 .ckpt 檔案在目前工作目錄
-    with zipfile.ZipFile(model.path, 'w', zipfile.ZIP_DEFLATED) as zf:
-        zf.write(ckpt_filename, os.path.basename(ckpt_filename))
+    model.uri = model.uri + '.ckpt'
+    trainer.save_checkpoint(model.path)
 
 @dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning', "ray[serve]==2.41.0"])
 def deploy_service(model: Input[Model]):
-    import os
-    import zipfile
     
-    def extract_zip(zip_file_path, extract_path):
-        with zipfile.ZipFile(zip_file_path, 'r') as zipf:
-            zipf.extractall(extract_path)
-    
-    zip_file = model.path
-    destination_path = "model_path"  
-
-    os.makedirs(destination_path, exist_ok=True)  # 創建目標資料夾，如果不存在
-    extract_zip(zip_file, destination_path)
 
     import ray
     from ray import serve
@@ -336,7 +319,7 @@ def deploy_service(model: Input[Model]):
     # 初始化 Ray 和部署服務
     ray.init(address="http://raycluster-kuberay-head-svc.default:8265")  # 連接到現有的 Ray 集群
 
-    deployment = ImageUpscaler.bind(checkpoint_path="sr_lightning_model.ckpt")
+    deployment = ImageUpscaler.bind(checkpoint_path=model.path)
     serve.run(deployment)
 
 
