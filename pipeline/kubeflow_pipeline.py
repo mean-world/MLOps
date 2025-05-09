@@ -123,6 +123,7 @@ def train_model(
     
     import torch.nn as nn
     import torch.nn.functional as F
+    from lightning.pytorch.loggers import MLFlowLogger
 
     #model part 
     class SimpleUpscaleCNN(nn.Module):
@@ -228,7 +229,8 @@ def train_model(
     )
 
     # --- 創建 Trainer ---
-    trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1)
+    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="file:./ml-runs")
+    trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1, logger=mlf_logger)
 
     # --- 訓練模型 ---
     trainer.fit(sample_model) # 現在不需要傳遞 datamodule 如果你在 LightningModule 中定義了 dataloaders
@@ -245,8 +247,7 @@ def train_model(
 
 @dsl.component(base_image="rayproject/ray:2.41.0", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning'])
 def deploy_service(model: Input[Model]):
-    
-
+    import os
     import ray
     from ray import serve
     import torch
@@ -319,6 +320,8 @@ def deploy_service(model: Input[Model]):
     # 初始化 Ray 和部署服務
     ray.init(address="ray://rayservice-sample-raycluster-h4cvh-head-svc.default:10001")  # 連接到現有的 Ray 集群
 
+    os.system('ray job submit   -- pip install pytorch_lightning')
+    os.system('ray job submit   -- pip install pillow')
     deployment = ImageUpscaler.bind(checkpoint_path=model.path)
     serve.run(deployment)
 
