@@ -243,7 +243,7 @@ def train_model(
     model.uri = model.uri + '.ckpt'
     trainer.save_checkpoint(model.path)
 
-@dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning', "ray[serve]==2.41.0"])
+@dsl.component(base_image="rayproject/ray:2.41.0", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning'])
 def deploy_service(model: Input[Model]):
     
 
@@ -317,7 +317,7 @@ def deploy_service(model: Input[Model]):
             return {"super_resolution_image": base64_image}
 
     # 初始化 Ray 和部署服務
-    ray.init(address="http://raycluster-kuberay-head-svc.default:8265")  # 連接到現有的 Ray 集群
+    ray.init(address="ray://rayservice-sample-raycluster-h4cvh-head-svc.default:10001")  # 連接到現有的 Ray 集群
 
     deployment = ImageUpscaler.bind(checkpoint_path=model.path)
     serve.run(deployment)
