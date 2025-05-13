@@ -1,0 +1,28 @@
+image:
+  repository: rayproject/ray
+  tag: 2.41.0
+  pullPolicy: IfNotPresent
+
+nameOverride: "kuberay"
+fullnameOverride: ""
+
+head:
+  resources:
+    limits:
+      cpu: "4"
+      memory: "2G"
+    requests:
+      cpu: "4"
+      memory: "2G"
+worker:
+  groupName: workergroup
+  replicas: 3
+  minReplicas: 3
+  maxReplicas: 4
+  resources:
+    limits:
+      cpu: "4"
+      memory: "2G"
+    requests:
+      cpu: "4"
+      memory: "2G"

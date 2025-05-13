@@ -1,5 +1,3 @@
-from typing import List
-
 from kfp import client
 from kfp import dsl
 from kfp.dsl import Dataset
@@ -28,7 +26,6 @@ def load_dataset(Portrait_dataset: Output[Dataset]):
     output_zip_file = Portrait_dataset.path
     compress_directory_to_zip(input_directory, output_zip_file)
 
-
 @dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning'])
 def train_model(
     Portrait_dataset: Input[Dataset],
@@ -44,7 +41,7 @@ def train_model(
     zip_file = Portrait_dataset.path
     destination_path = "dataset"  
 
-    os.makedirs(destination_path, exist_ok=True)  # 創建目標資料夾，如果不存在
+    os.makedirs(destination_path, exist_ok=True)
     extract_zip(zip_file, destination_path)
 
     import torch
@@ -96,7 +93,6 @@ def train_model(
 
         train_dataset, val_dataset, test_dataset = random_split(full_dataset, [train_size, val_size, test_size], generator=torch.Generator().manual_seed(random_seed))
 
-        # 定義不同的 transform 用於訓練、驗證和測試集
         train_transforms = transforms.Compose([
             transforms.ToTensor(),
             transforms.RandomHorizontalFlip(),
@@ -213,8 +209,8 @@ def train_model(
     learning_rate = 0.001
     batch_size = 2
     max_epochs = 10
-    hr_data_dir = 'dataset/target' # 你的高解析度圖片目錄
-    lr_data_dir = 'dataset/input' # 你的低解析度圖片目錄
+    hr_data_dir = 'dataset/target' 
+    lr_data_dir = 'dataset/input' 
     num_workers = 0
     random_seed = 42
 
@@ -228,20 +224,15 @@ def train_model(
         random_seed=random_seed
     )
 
-    # --- 創建 Trainer ---
-    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="file:./ml-runs")
+    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow_server:8080")
     trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1, logger=mlf_logger)
 
-    # --- 訓練模型 ---
-    trainer.fit(sample_model) # 現在不需要傳遞 datamodule 如果你在 LightningModule 中定義了 dataloaders
+    trainer.fit(sample_model) 
 
-    # --- 驗證模型 ---
     trainer.validate(sample_model)
 
-    # --- 測試模型 ---
     trainer.test(sample_model)
 
-    # --- 保存模型 ---
     model.uri = model.uri + '.ckpt'
     trainer.save_checkpoint(model.path)
 
@@ -259,7 +250,6 @@ def deploy_service(model: Input[Model]):
     import io
     import base64
 
-    # 重新定義你的模型架構 (與訓練時相同)
     class SimpleUpscaleCNN(nn.Module):
         def __init__(self):
             super(SimpleUpscaleCNN, self).__init__()
@@ -317,14 +307,12 @@ def deploy_service(model: Input[Model]):
             base64_image = pil_to_base64(sr_image)
             return {"super_resolution_image": base64_image}
 
-    # 初始化 Ray 和部署服務
-    ray.init(address="ray://rayservice-sample-raycluster-h4cvh-head-svc.default:10001")  # 連接到現有的 Ray 集群
+    os.system('RAY_ADDRESS="http://rayservice-sample-raycluster-h4cvh-head-svc.default:8265" ray job submit   -- pip install pytorch_lightning')
+    os.system('RAY_ADDRESS="http://rayservice-sample-raycluster-h4cvh-head-svc.default:8265" ray job submit   -- pip install pillow')
 
-    os.system('ray job submit   -- pip install pytorch_lightning')
-    os.system('ray job submit   -- pip install pillow')
+    ray.init(address="ray://rayservice-sample-raycluster-h4cvh-head-svc.default:10001")  
     deployment = ImageUpscaler.bind(checkpoint_path=model.path)
     serve.run(deployment)
-
 
 @dsl.pipeline(name='kubeflow-pipeline')
 def my_pipeline():
