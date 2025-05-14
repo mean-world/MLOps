@@ -182,7 +182,7 @@ spec:
       volumes:
       - name: minio-storage
         persistentVolumeClaim:
-          claimName: mflow-minio-pvc
+          claimName: mlflow-minio-pvc
           
 #minio-svc
 ---
@@ -222,7 +222,7 @@ spec:
   replicas: 1
   selector:
     matchLabels: 
-      app.kubernetes.io/name: mlflow
+      app.kubernetes.io/name: mlflow-deploy
   template:
     metadata:
       labels: 
