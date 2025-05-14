@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mlflow_server
+  name: mlflow-server
 
 # postgresql-pv
 ---
@@ -9,7 +9,7 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: postgresql-pv
-  namespace: mlflow_server
+  namespace: mlflow-server
 spec:
   capacity:
     storage: 10Gi
@@ -25,7 +25,7 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: minio-pv
-  namespace: mlflow_server
+  namespace: mlflow-server
 spec:
   capacity:
     storage: 20Gi
@@ -41,7 +41,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgresql-pvc
-  namespace: mlflow_server
+  namespace: mlflow-server
 spec:
   accessModes:
     - ReadWriteOnce
@@ -55,7 +55,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: minio-pvc
-  namespace: mlflow_server
+  namespace: mlflow-server
 spec:
   accessModes:
     - ReadWriteOnce
@@ -68,7 +68,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: mlflow_server
+  namespace: mlflow-server
   labels: 
     app.kubernetes.io/name: postgres
 spec:
@@ -88,7 +88,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: mlflow_server
+  namespace: mlflow-server
   labels: 
     app.kubernetes.io/name: postgres
 spec:
@@ -136,7 +136,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: minio
-  namespace: mlflow_server
+  namespace: mlflow-server
   labels: 
     app.kubernetes.io/name: minio
 spec:
@@ -190,7 +190,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: minio
-  namespace: mlflow_server
+  namespace: mlflow-server
   labels: 
     app.kubernetes.io/name: minio
 spec:
@@ -215,7 +215,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mlflow
-  namespace: mlflow_server
+  namespace: mlflow-server
   labels: 
     app.kubernetes.io/name: mlflow
 spec:
@@ -257,7 +257,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mlflow-svc
-  namespace: mlflow_server
+  namespace: mlflow-server
 spec:
   type: NodePort
   selector:

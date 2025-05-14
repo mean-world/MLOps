@@ -224,7 +224,7 @@ def train_model(
         random_seed=random_seed
     )
 
-    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow_server:8080")
+    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow-server:8080")
     trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1, logger=mlf_logger)
 
     trainer.fit(sample_model) 
