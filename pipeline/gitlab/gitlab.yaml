@@ -9,7 +9,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/data/gitlab
+    path: gitlab-data
   persistentVolumeReclaimPolicy: Retain
 ---
 apiVersion: v1
@@ -24,7 +24,7 @@ metadata:
   namespace: gitlab
 type: Opaque
 stringData:
-  ROOT_PASSWORD: ChangeMe123  # ← 請自行修改
+  ROOT_PASSWORD: test1234  # ← 請自行修改
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -41,23 +41,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: gitlab-svc
-  namespace: gitlab
-spec:
-  selector:
-    app: gitlab
-  type: ClusterIP
-  ports:
-    - name: web
-      port: 80
-      targetPort: 80
-    - name: ssh
-      port: 22
-      targetPort: 22
----
-apiVersion: v1
-kind: Service
-metadata:
   name: gitlab-nodeport
   namespace: gitlab
 spec:
@@ -68,7 +51,7 @@ spec:
     - name: web
       port: 80
       targetPort: 80
-      nodePort: 30089
+      nodePort: 30188
     - name: ssh
       port: 22
       targetPort: 22
@@ -96,15 +79,13 @@ spec:
             - containerPort: 80
             - containerPort: 22
           env:
-            - name: ROOT_PASSWORD
+            - name: GITLAB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: gitlab-secret
                   key: ROOT_PASSWORD
-            - name: GITLAB_OMNIBUS_CONFIG
-              value: |
-                external_url 'http://gitlab-svc.gitlab.svc.cluster.local';
-                gitlab_rails['initial_root_password'] = "${ROOT_PASSWORD}";
+            - name: GITLAB_HOST
+              value: http://localhost:30188
           volumeMounts:
             - name: gitlab-data
               mountPath: /var/opt/gitlab

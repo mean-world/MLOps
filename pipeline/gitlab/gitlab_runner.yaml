@@ -7,7 +7,7 @@ data:
   config.toml: |
     [[runners]]
       name = "k8s-docker-runner"
-      url = "http://gitlab-svc.gitlab.svc.cluster.local"
+      url = "http://gitlab-svc.gitlab.svc.cluster.local:80"
       token = "__REPLACE_ME__"
       executor = "docker"
       [runners.docker]
