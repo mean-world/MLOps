@@ -217,12 +217,12 @@ metadata:
   name: mlflow
   namespace: mlflow-server
   labels: 
-    app.kubernetes.io/name: mlflow
+    app.kubernetes.io/name: mlflow-deploy
 spec:
   replicas: 1
   selector:
     matchLabels: 
-      app.kubernetes.io/name: mlflow-deploy
+      app.kubernetes.io/name: mlflow
   template:
     metadata:
       labels: 
