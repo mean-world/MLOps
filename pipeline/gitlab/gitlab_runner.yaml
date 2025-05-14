@@ -1,12 +1,18 @@
----
 apiVersion: v1
-kind: Secret
+kind: ConfigMap
 metadata:
-  name: gitlab-runner-secret
+  name: gitlab-runner-config
   namespace: gitlab
-type: Opaque
-stringData:
-  runner-registration-token: "REPLACE_ME_WITH_YOUR_TOKEN"
+data:
+  config.toml: |
+    [[runners]]
+      name = "k8s-docker-runner"
+      url = "http://gitlab-svc.gitlab.svc.cluster.local"
+      token = "__REPLACE_ME__"
+      executor = "docker"
+      [runners.docker]
+        image = "python:3.10"
+        privileged = true
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -29,14 +35,11 @@ spec:
           env:
             - name: CI_SERVER_URL
               value: "http://gitlab-svc.gitlab.svc.cluster.local"
-            - name: REGISTRATION_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: gitlab-runner-secret
-                  key: runner-registration-token
-            - name: RUNNER_EXECUTOR
-              value: "docker"
-            - name: DOCKER_IMAGE
-              value: "python:3.10"
-            - name: DOCKER_PRIVILEGED
-              value: "true"
+          volumeMounts:
+            - name: runner-config
+              mountPath: /etc/gitlab-runner/config.toml
+              subPath: config.toml
+      volumes:
+        - name: runner-config
+          configMap:
+            name: gitlab-runner-config
