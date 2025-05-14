@@ -32,9 +32,6 @@ spec:
       containers:
         - name: gitlab-runner
           image: gitlab/gitlab-runner:alpine
-          env:
-            - name: CI_SERVER_URL
-              value: "http://gitlab-svc.gitlab.svc.cluster.local"
           volumeMounts:
             - name: runner-config
               mountPath: /etc/gitlab-runner/config.toml

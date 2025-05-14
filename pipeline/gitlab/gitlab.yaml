@@ -41,7 +41,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: gitlab-nodeport
+  name: gitlab-svc
   namespace: gitlab
 spec:
   type: NodePort
@@ -52,10 +52,6 @@ spec:
       port: 80
       targetPort: 80
       nodePort: 30188
-    - name: ssh
-      port: 22
-      targetPort: 22
-      nodePort: 30022
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -77,7 +73,6 @@ spec:
           image: gitlab/gitlab-ce:latest
           ports:
             - containerPort: 80
-            - containerPort: 22
           env:
             - name: GITLAB_ROOT_PASSWORD
               valueFrom:
