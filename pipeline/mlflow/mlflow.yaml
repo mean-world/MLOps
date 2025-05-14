@@ -260,7 +260,7 @@ metadata:
 spec:
   type: NodePort
   selector:
-    mlflow-type: server
+    app.kubernetes.io/name: mlflow
   ports:
   - protocol: TCP
     port: 8080
