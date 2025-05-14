@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-runner-secret
+  namespace: gitlab
+type: Opaque
+stringData:
+  runner-registration-token: "REPLACE_ME_WITH_YOUR_TOKEN"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab-runner
+  namespace: gitlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab-runner
+  template:
+    metadata:
+      labels:
+        app: gitlab-runner
+    spec:
+      containers:
+        - name: gitlab-runner
+          image: gitlab/gitlab-runner:alpine
+          env:
+            - name: CI_SERVER_URL
+              value: "http://gitlab-svc.gitlab.svc.cluster.local"
+            - name: REGISTRATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gitlab-runner-secret
+                  key: runner-registration-token
+            - name: RUNNER_EXECUTOR
+              value: "docker"
+            - name: DOCKER_IMAGE
+              value: "python:3.10"
+            - name: DOCKER_PRIVILEGED
+              value: "true"

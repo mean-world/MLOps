@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gitlab-data-pv
+  namespace: gitlab
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/gitlab
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitlab
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-secret
+  namespace: gitlab
+type: Opaque
+stringData:
+  ROOT_PASSWORD: ChangeMe123  # ← 請自行修改
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitlab-data-pvc
+  namespace: gitlab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitlab-svc
+  namespace: gitlab
+spec:
+  selector:
+    app: gitlab
+  type: ClusterIP
+  ports:
+    - name: web
+      port: 80
+      targetPort: 80
+    - name: ssh
+      port: 22
+      targetPort: 22
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitlab-nodeport
+  namespace: gitlab
+spec:
+  type: NodePort
+  selector:
+    app: gitlab
+  ports:
+    - name: web
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+    - name: ssh
+      port: 22
+      targetPort: 22
+      nodePort: 30022
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab
+  namespace: gitlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab
+  template:
+    metadata:
+      labels:
+        app: gitlab
+    spec:
+      containers:
+        - name: gitlab
+          image: gitlab/gitlab-ce:latest
+          ports:
+            - containerPort: 80
+            - containerPort: 22
+          env:
+            - name: ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gitlab-secret
+                  key: ROOT_PASSWORD
+            - name: GITLAB_OMNIBUS_CONFIG
+              value: |
+                external_url 'http://gitlab-svc.gitlab.svc.cluster.local';
+                gitlab_rails['initial_root_password'] = "${ROOT_PASSWORD}";
+          volumeMounts:
+            - name: gitlab-data
+              mountPath: /var/opt/gitlab
+      volumes:
+        - name: gitlab-data
+          persistentVolumeClaim:
+            claimName: gitlab-data-pvc
