@@ -17,14 +17,14 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain 
   hostPath:
-    path: /data/postgresql
+    path: mlflow-data/postgresql
 
 # minio-pv
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: minio-pv
+  name: mlflow-minio-pv
   namespace: mlflow-server
 spec:
   capacity:
@@ -33,7 +33,7 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain 
   hostPath:
-    path: /data/minio
+    path: mlflow-data/minio
 
 #postgresql-pvc
 ---
@@ -54,7 +54,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: minio-pvc
+  name: mlflow-minio-pvc
   namespace: mlflow-server
 spec:
   accessModes:
@@ -102,7 +102,7 @@ spec:
         app.kubernetes.io/name: postgres
     spec:
       containers:
-      - image: "ecr.flyte.org/ubuntu/postgres:13-21.04_beta"
+      - image: "postgres:15-alpine3.20"
         imagePullPolicy: "IfNotPresent"
         name: postgres
         env:
@@ -152,7 +152,7 @@ spec:
       securityContext:
         fsGroup: 1001 
       containers:
-      - image: "bitnami/minio:2023.7.18-debian-11-r2"
+      - image: "quay.io/minio/minio"
         imagePullPolicy: "IfNotPresent"
         name: minio
         env:
@@ -182,7 +182,7 @@ spec:
       volumes:
       - name: minio-storage
         persistentVolumeClaim:
-          claimName: minio-pvc
+          claimName: mflow-minio-pvc
           
 #minio-svc
 ---
