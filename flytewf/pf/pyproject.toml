@@ -1,0 +1,16 @@
+[project]
+name = "peopleface"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "torch==2.4.1",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "single"

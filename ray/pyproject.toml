@@ -1,0 +1,8 @@
+[project]
+name = "yolo"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "ray[all,client,default]==2.41.0",
+    "ultralytics>=8.3.142",
+]

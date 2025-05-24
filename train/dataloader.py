@@ -5,6 +5,7 @@ import os
 from torchvision import transforms
 import random
 
+
 class SRDataset(Dataset):
     def __init__(self, hr_dir, lr_dir, transform=None):
         self.hr_dir = hr_dir
@@ -13,9 +14,13 @@ class SRDataset(Dataset):
         self.lr_images = sorted(os.listdir(lr_dir))
         self.transform = transform
 
-        assert len(self.hr_images) == len(self.lr_images), "Number of HR and LR images must be the same."
+        assert len(self.hr_images) == len(self.lr_images), (
+            "Number of HR and LR images must be the same."
+        )
         for hr, lr in zip(self.hr_images, self.lr_images):
-            assert os.path.splitext(hr)[0] == os.path.splitext(lr)[0], f"HR and LR filenames do not match: {hr} vs {lr}"
+            assert os.path.splitext(hr)[0] == os.path.splitext(lr)[0], (
+                f"HR and LR filenames do not match: {hr} vs {lr}"
+            )
 
     def __len__(self):
         return len(self.hr_images)
@@ -34,7 +39,19 @@ class SRDataset(Dataset):
         else:
             return transforms.ToTensor()(lr_image), transforms.ToTensor()(hr_image)
 
-def create_sr_dataloaders(hr_dir, lr_dir, batch_size, val_split=0.1, test_split=0.1, augment_train=True, augment_val=False, augment_test=False, num_workers=4, random_seed=42):
+
+def create_sr_dataloaders(
+    hr_dir,
+    lr_dir,
+    batch_size,
+    val_split=0.1,
+    test_split=0.1,
+    augment_train=True,
+    augment_val=False,
+    augment_test=False,
+    num_workers=4,
+    random_seed=42,
+):
     """
     創建超解析度任務的訓練集、驗證集和測試集資料載入器。
 
@@ -62,32 +79,73 @@ def create_sr_dataloaders(hr_dir, lr_dir, batch_size, val_split=0.1, test_split=
     test_size = int(test_split * dataset_size)
     train_size = dataset_size - val_size - test_size
 
-    train_dataset, val_dataset, test_dataset = random_split(full_dataset, [train_size, val_size, test_size], generator=torch.Generator().manual_seed(random_seed))
+    train_dataset, val_dataset, test_dataset = random_split(
+        full_dataset,
+        [train_size, val_size, test_size],
+        generator=torch.Generator().manual_seed(random_seed),
+    )
 
     # 定義不同的 transform 用於訓練、驗證和測試集
-    train_transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-    ]) if augment_train else transforms.ToTensor()
+    train_transforms = (
+        transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomVerticalFlip(),
+            ]
+        )
+        if augment_train
+        else transforms.ToTensor()
+    )
 
-    val_transforms = transforms.Compose([
-        transforms.ToTensor(),
-    ]) if augment_val else transforms.ToTensor()
+    val_transforms = (
+        transforms.Compose(
+            [
+                transforms.ToTensor(),
+            ]
+        )
+        if augment_val
+        else transforms.ToTensor()
+    )
 
-    test_transforms = transforms.Compose([
-        transforms.ToTensor(),
-    ]) if augment_test else transforms.ToTensor()
+    test_transforms = (
+        transforms.Compose(
+            [
+                transforms.ToTensor(),
+            ]
+        )
+        if augment_test
+        else transforms.ToTensor()
+    )
 
     train_dataset.transform = train_transforms
     val_dataset.transform = val_transforms
     test_dataset.transform = test_transforms
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
+    )
 
     return train_loader, val_loader, test_loader
+
 
 # if __name__ == '__main__':
 #     # 示例使用

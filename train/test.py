@@ -1,4 +1,3 @@
-import numpy
 from PIL import Image
 
 # 開啟原始圖片
@@ -13,7 +12,9 @@ target_width = int(original_width * scale_factor)
 target_height = int(original_height * scale_factor)
 
 # 使用 Lanczos 插值調整大小
-low_res_image_lanczos = original_image.resize((target_width, target_height), resample=Image.BICUBIC)
+low_res_image_lanczos = original_image.resize(
+    (target_width, target_height), resample=Image.BICUBIC
+)
 # low_res_image_lanczos.save("low_res_lanczos.png")
 
 

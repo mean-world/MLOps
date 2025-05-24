@@ -1,11 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from PIL import Image
-import os
-from torchvision import transforms
-from tqdm import tqdm # 用於顯示訓練進度條
+from tqdm import tqdm  # 用於顯示訓練進度條
 
 import dataloader
 import model
@@ -15,8 +11,8 @@ device = torch.device("mps" if torch.mps.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # --- 1. 設定資料目錄和訓練參數 ---
-hr_data_dir = 'dataset/image' 
-lr_data_dir = 'dataset/downsample_0.25'
+hr_data_dir = "dataset/image"
+lr_data_dir = "dataset/downsample_0.25"
 learning_rate = 0.001
 num_epochs = 10
 batch_size = 2
@@ -27,9 +23,16 @@ random_seed = 42
 
 # --- 2. 創建資料載入器 ---
 train_loader, val_loader, test_loader = dataloader.create_sr_dataloaders(
-    hr_data_dir, lr_data_dir, batch_size, val_split, test_split,
-    augment_train=True, augment_val=False, augment_test=False,
-    num_workers=num_workers, random_seed=random_seed
+    hr_data_dir,
+    lr_data_dir,
+    batch_size,
+    val_split,
+    test_split,
+    augment_train=True,
+    augment_val=False,
+    augment_test=False,
+    num_workers=num_workers,
+    random_seed=random_seed,
 )
 
 print(f"Train dataset size: {len(train_loader.dataset)}")
@@ -45,7 +48,9 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
-    for i, (lr_images, hr_images) in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}")):
+    for i, (lr_images, hr_images) in enumerate(
+        tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}")
+    ):
         lr_images = lr_images.to(device)
         hr_images = hr_images.to(device)
 
@@ -59,12 +64,12 @@ for epoch in range(num_epochs):
         running_loss += loss.item()
 
     epoch_loss = running_loss / len(train_loader)
-    print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {epoch_loss:.4f}")
+    print(f"Epoch {epoch + 1}/{num_epochs}, Train Loss: {epoch_loss:.4f}")
 
     # 驗證階段
-    model.eval() # 將模型設置為評估模式
+    model.eval()  # 將模型設置為評估模式
     val_loss = 0.0
-    with torch.no_grad(): # 在評估階段禁用梯度計算
+    with torch.no_grad():  # 在評估階段禁用梯度計算
         for i, (lr_val_images, hr_val_images) in enumerate(val_loader):
             lr_val_images = lr_val_images.to(device)
             hr_val_images = hr_val_images.to(device)
@@ -73,7 +78,7 @@ for epoch in range(num_epochs):
             val_loss += criterion(val_outputs, hr_val_images).item()
 
     epoch_val_loss = val_loss / len(val_loader)
-    print(f"Epoch {epoch+1}/{num_epochs}, Validation Loss: {epoch_val_loss:.4f}")
+    print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {epoch_val_loss:.4f}")
 
 # --- 5. 在測試集上評估模型 (在訓練完成後) ---
 model.eval()
@@ -90,5 +95,5 @@ epoch_test_loss = test_loss / len(test_loader)
 print(f"Test Loss: {epoch_test_loss:.4f}")
 
 # --- 6. 保存訓練好的模型 ---
-torch.save(model.state_dict(), 'sr_model_split.pth')
+torch.save(model.state_dict(), "sr_model_split.pth")
 print("Training finished. Model saved as sr_model_split.pth")
