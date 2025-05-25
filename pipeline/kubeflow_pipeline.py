@@ -26,7 +26,7 @@ def load_dataset(Portrait_dataset: Output[Dataset]):
     output_zip_file = Portrait_dataset.path
     compress_directory_to_zip(input_directory, output_zip_file)
 
-@dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning'])
+@dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning', 'mlflow'])
 def train_model(
     Portrait_dataset: Input[Dataset],
     model: Output[Model],
@@ -142,6 +142,7 @@ def train_model(
     import torch.optim as optim
     import pytorch_lightning as pl
     from torch.utils.data import DataLoader
+    from pytorch_lightning.callbacks import ModelCheckpoint
 
     class SRLightningModule(pl.LightningModule):
         def __init__(self, learning_rate, hr_dir='data/hr', lr_dir='data/lr', batch_size=16, num_workers=4, random_seed=42):
@@ -154,6 +155,7 @@ def train_model(
             self.batch_size = batch_size
             self.num_workers = num_workers
             self.random_seed = random_seed
+            self.save_hyperparameters()
 
         def forward(self, x):
             return self.model(x)
@@ -224,7 +226,18 @@ def train_model(
         random_seed=random_seed
     )
 
+    # checkpoint_callback = ModelCheckpoint(
+    # dirpath="checkpoints/",
+    # filename="best_model-epoch{epoch:02d}-val_loss{val_loss:.4f}",
+    # save_top_k=1,
+    # monitor="val_loss",
+    # mode="min",
+    # auto_insert_metric_name=False,
+    # )
+
+    # mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow-server:8080", log_model=True)
     mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow-server:8080")
+    # trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1, logger=mlf_logger, callbacks=[checkpoint_callback])
     trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1, logger=mlf_logger)
 
     trainer.fit(sample_model) 
@@ -307,10 +320,10 @@ def deploy_service(model: Input[Model]):
             base64_image = pil_to_base64(sr_image)
             return {"super_resolution_image": base64_image}
 
-    os.system('RAY_ADDRESS="http://rayservice-sample-raycluster-h4cvh-head-svc.default:8265" ray job submit   -- pip install pytorch_lightning')
-    os.system('RAY_ADDRESS="http://rayservice-sample-raycluster-h4cvh-head-svc.default:8265" ray job submit   -- pip install pillow')
+    os.system('RAY_ADDRESS="http://raycluster-kuberay-head-svc.ray:8265" ray job submit   -- pip install pytorch_lightning')
+    os.system('RAY_ADDRESS="http://raycluster-kuberay-head-svc.ray:8265" ray job submit   -- pip install pillow')
 
-    ray.init(address="ray://rayservice-sample-raycluster-h4cvh-head-svc.default:10001")  
+    ray.init(address="ray://raycluster-kuberay-head-svc.ray:10001")  
     deployment = ImageUpscaler.bind(checkpoint_path=model.path)
     serve.run(deployment)
 
