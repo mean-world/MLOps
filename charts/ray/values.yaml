@@ -7,7 +7,7 @@
 
 image:
   repository: docker.io/0yukali0/ray
-  tag: yolo-v1
+  tag: v1
   pullPolicy: IfNotPresent
 
 nameOverride: "kuberay"

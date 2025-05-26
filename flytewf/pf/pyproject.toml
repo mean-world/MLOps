@@ -3,11 +3,17 @@ name = "peopleface"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "flytekit>=1.15.4",
+    "flytekitplugins-ray>=1.15.4",
+    "lightning>=2.5.1.post0",
+    "pillow>=11.2.1",
+    "ray[serve]==2.41.0",
     "torch==2.4.1",
+    "torchvision>=0.19.1",
 ]
 
 [tool.ruff]
-line-length = 100
+line-length = 150
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]

@@ -1,8 +1,12 @@
 [project]
 name = "yolo"
 version = "0.1.0"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 dependencies = [
+    "flytekit>=1.15.4",
+    "lightning>=2.5.1.post0",
     "ray[all,client,default]==2.41.0",
+    "torch>=2.7.0",
+    "torchvision>=0.22.0",
     "ultralytics>=8.3.142",
 ]
