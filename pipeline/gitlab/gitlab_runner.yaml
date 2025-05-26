@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitlab-runner-config
+  namespace: gitlab
+data:
+  config.toml: |
+    [[runners]]
+      name = "k8s-docker-runner"
+      url = "http://gitlab-svc.gitlab.svc.cluster.local"
+      token = "__REPLACE_ME__"
+      executor = "docker"
+      [runners.docker]
+        image = "python:3.10"
+        privileged = true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab-runner
+  namespace: gitlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab-runner
+  template:
+    metadata:
+      labels:
+        app: gitlab-runner
+    spec:
+      containers:
+        - name: gitlab-runner
+          image: gitlab/gitlab-runner:alpine
+          volumeMounts:
+            - name: runner-config
+              mountPath: /etc/gitlab-runner/config.toml
+              subPath: config.toml
+      volumes:
+        - name: runner-config
+          configMap:
+            name: gitlab-runner-config

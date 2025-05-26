@@ -1,0 +1,12 @@
+stages:
+  - trigger_pipeline
+
+trigger_kubeflow_pipeline:
+  stage: trigger_pipeline
+  image: python:3.10
+  script:
+    - pip install kfp==2.4.0 gitpython
+    - python kubeflow_pipeline.py 
+  only:
+    changes:
+      - dataset/**/*

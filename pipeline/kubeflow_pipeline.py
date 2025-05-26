@@ -9,8 +9,8 @@ from kfp.dsl import Output
 def load_dataset(Portrait_dataset: Output[Dataset]):
     import os
     import zipfile
-
-    os.system("git clone https://github.com/mean-world/MLOps.git")
+    
+    os.system("git clone https://gitlab-svc.gitlab/kubeflow_pipline/SimpleUpscale.git")
 
     def compress_directory_to_zip(input_dir, output_zip_path):
         with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -21,12 +21,12 @@ def load_dataset(Portrait_dataset: Output[Dataset]):
                     zipf.write(file_path, relative_path)
 
 
-    input_directory = "MLOps/pipeline/test_dataset/"  
+    input_directory = "SimpleUpscale/dataset/"
     Portrait_dataset.uri = Portrait_dataset.uri + '.zip'
     output_zip_file = Portrait_dataset.path
     compress_directory_to_zip(input_directory, output_zip_file)
 
-@dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning'])
+@dsl.component(base_image="pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel", packages_to_install=['torch', 'torchvision', 'pillow', 'pytorch-lightning', 'mlflow'])
 def train_model(
     Portrait_dataset: Input[Dataset],
     model: Output[Model],
@@ -47,9 +47,15 @@ def train_model(
     import torch
     from torch.utils.data import Dataset, DataLoader, random_split
     from PIL import Image
-    import os
     from torchvision import transforms
     import random
+    import torch.nn as nn
+    import torch.nn.functional as F
+    from lightning.pytorch.loggers import MLFlowLogger
+    import torch.optim as optim
+    import pytorch_lightning as pl
+    from torch.utils.data import DataLoader
+    # from pytorch_lightning.callbacks import ModelCheckpoint
     
     #dataloader part
     class SRDataset(Dataset):
@@ -116,10 +122,6 @@ def train_model(
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True)
 
         return train_loader, val_loader, test_loader
-    
-    import torch.nn as nn
-    import torch.nn.functional as F
-    from lightning.pytorch.loggers import MLFlowLogger
 
     #model part 
     class SimpleUpscaleCNN(nn.Module):
@@ -138,10 +140,6 @@ def train_model(
             x = self.upsample(x)
             x = self.conv_out(x)
             return x
-        
-    import torch.optim as optim
-    import pytorch_lightning as pl
-    from torch.utils.data import DataLoader
 
     class SRLightningModule(pl.LightningModule):
         def __init__(self, learning_rate, hr_dir='data/hr', lr_dir='data/lr', batch_size=16, num_workers=4, random_seed=42):
@@ -154,6 +152,7 @@ def train_model(
             self.batch_size = batch_size
             self.num_workers = num_workers
             self.random_seed = random_seed
+            self.save_hyperparameters()
 
         def forward(self, x):
             return self.model(x)
@@ -224,7 +223,18 @@ def train_model(
         random_seed=random_seed
     )
 
-    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow_server:8080")
+    # checkpoint_callback = ModelCheckpoint(
+    # dirpath="checkpoints/",
+    # filename="best_model-epoch{epoch:02d}-val_loss{val_loss:.4f}",
+    # save_top_k=1,
+    # monitor="val_loss",
+    # mode="min",
+    # auto_insert_metric_name=False,
+    # )
+
+    # mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow-server:8080", log_model=True)
+    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri="http://mlflow-svc.mlflow-server:8080")
+    # trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1, logger=mlf_logger, callbacks=[checkpoint_callback])
     trainer = pl.Trainer(max_epochs=max_epochs, accelerator='auto', devices=1, logger=mlf_logger)
 
     trainer.fit(sample_model) 
@@ -307,10 +317,10 @@ def deploy_service(model: Input[Model]):
             base64_image = pil_to_base64(sr_image)
             return {"super_resolution_image": base64_image}
 
-    os.system('RAY_ADDRESS="http://rayservice-sample-raycluster-h4cvh-head-svc.default:8265" ray job submit   -- pip install pytorch_lightning')
-    os.system('RAY_ADDRESS="http://rayservice-sample-raycluster-h4cvh-head-svc.default:8265" ray job submit   -- pip install pillow')
+    os.system('RAY_ADDRESS="http://raycluster-kuberay-head-svc.ray:8265" ray job submit   -- pip install pytorch_lightning')
+    os.system('RAY_ADDRESS="http://raycluster-kuberay-head-svc.ray:8265" ray job submit   -- pip install pillow')
 
-    ray.init(address="ray://rayservice-sample-raycluster-h4cvh-head-svc.default:10001")  
+    ray.init(address="ray://raycluster-kuberay-head-svc.ray:10001")  
     deployment = ImageUpscaler.bind(checkpoint_path=model.path)
     serve.run(deployment)
 
