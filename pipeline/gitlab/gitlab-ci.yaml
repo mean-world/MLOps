@@ -6,7 +6,7 @@ trigger_kubeflow_pipeline:
   image: python:3.10
   script:
     - pip install kfp==2.4.0 gitpython
-    - python kubeflow_pipeline.py
+    - python kubeflow_pipeline.py 
   only:
     changes:
-      - data/**/*
+      - dataset/**/*

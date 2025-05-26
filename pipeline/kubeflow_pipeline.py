@@ -9,8 +9,8 @@ from kfp.dsl import Output
 def load_dataset(Portrait_dataset: Output[Dataset]):
     import os
     import zipfile
-
-    os.system("git clone https://github.com/mean-world/MLOps.git")
+    
+    os.system("git clone https://gitlab-svc.gitlab/kubeflow_pipline/SimpleUpscale.git")
 
     def compress_directory_to_zip(input_dir, output_zip_path):
         with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -21,7 +21,7 @@ def load_dataset(Portrait_dataset: Output[Dataset]):
                     zipf.write(file_path, relative_path)
 
 
-    input_directory = "MLOps/pipeline/test_dataset/"  
+    input_directory = "SimpleUpscale/dataset/"
     Portrait_dataset.uri = Portrait_dataset.uri + '.zip'
     output_zip_file = Portrait_dataset.path
     compress_directory_to_zip(input_directory, output_zip_file)
@@ -47,9 +47,15 @@ def train_model(
     import torch
     from torch.utils.data import Dataset, DataLoader, random_split
     from PIL import Image
-    import os
     from torchvision import transforms
     import random
+    import torch.nn as nn
+    import torch.nn.functional as F
+    from lightning.pytorch.loggers import MLFlowLogger
+    import torch.optim as optim
+    import pytorch_lightning as pl
+    from torch.utils.data import DataLoader
+    # from pytorch_lightning.callbacks import ModelCheckpoint
     
     #dataloader part
     class SRDataset(Dataset):
@@ -116,10 +122,6 @@ def train_model(
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True)
 
         return train_loader, val_loader, test_loader
-    
-    import torch.nn as nn
-    import torch.nn.functional as F
-    from lightning.pytorch.loggers import MLFlowLogger
 
     #model part 
     class SimpleUpscaleCNN(nn.Module):
@@ -138,11 +140,6 @@ def train_model(
             x = self.upsample(x)
             x = self.conv_out(x)
             return x
-        
-    import torch.optim as optim
-    import pytorch_lightning as pl
-    from torch.utils.data import DataLoader
-    from pytorch_lightning.callbacks import ModelCheckpoint
 
     class SRLightningModule(pl.LightningModule):
         def __init__(self, learning_rate, hr_dir='data/hr', lr_dir='data/lr', batch_size=16, num_workers=4, random_seed=42):
