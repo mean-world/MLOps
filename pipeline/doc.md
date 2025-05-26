@@ -23,6 +23,11 @@ kubectl apply -f mlflow/mlflow.yaml
 # install gitlab server & runner
 ```
 kubectl apply -f gitlab/gitlab.yaml 
+# After the GitLab server is up and running, you will need to manually configure
+# the 'kubeflow_pipline/SimpleUpscale.git' repository within GitLab.
+# This typically involves creating a new project and importing the repository,
+# or setting up a mirror.
+
 #get runner token paste to gitlab_runner.yaml ConfigMap token 
 kubectl apply -f gitlab_runner.yaml
 ```
